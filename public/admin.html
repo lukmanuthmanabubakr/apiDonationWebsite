@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody id="formData">
+      <!-- Data will populate here -->
+    </tbody>
+  </table>
+  <script>
+    fetch('/get-form-data')
+      .then(response => response.json())
+      .then(data => {
+        const tableBody = document.getElementById('formData');
+        data.forEach(item => {
+          const row = `<tr>
+            <td>${item.name}</td>
+            <td>${item.email}</td>
+            <td>${item.message}</td>
+          </tr>`;
+          tableBody.innerHTML += row;
+        });
+      });
+  </script>
+</body>
+</html>
