@@ -20,6 +20,10 @@ const formSchema = new mongoose.Schema({
     type: Number, 
     required: true,
   },
+  country: {
+    type: String,
+    required: [true, "Please select a country"],
+  },
 }, { timestamps: true } );
 
 module.exports = mongoose.model("Form", formSchema);

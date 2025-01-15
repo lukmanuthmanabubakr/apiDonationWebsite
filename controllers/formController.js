@@ -63,13 +63,19 @@ exports.seedAdminSettings = async (req, res) => {
 // Random user submits a BTC payment
 exports.btcWalletAddress = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount, country } = req.body;
 
-    if (!amount) {
+    if (!amount || !country) {
       return res.status(400).json({ error: "Amount is required." });
     }
     if (amount < 10) {
       return res.status(400).json({ error: "Amount must be at least 10." });
+    }
+
+    const isValidCountry = countries.some((c) => c.name === country);
+    if (!isValidCountry) {
+      res.status(400);
+      throw new Error("Invalid country selection.");
     }
 
     // Fetch the wallet address from admin settings
@@ -81,6 +87,7 @@ exports.btcWalletAddress = async (req, res) => {
     // Save BTC payment to database
     const btcPayment = new Btc({
       amount,
+      country,
       walletAddress: adminSettings.btcWalletAddress,
     });
     await btcPayment.save();
