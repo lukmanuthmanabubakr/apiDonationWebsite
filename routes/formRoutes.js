@@ -1,5 +1,13 @@
 const express = require("express");
-const { submitForm, getFormData, btcWalletAddress, editBtcWalletAddress, seedAdminSettings, paypalPayment, editPaypalDetails } = require("../controllers/formController");
+const {
+  submitForm,
+  getFormData,
+  btcWalletAddress,
+  editBtcWalletAddress,
+  seedAdminSettings,
+  paypalPayment,
+  editPaypalDetails,
+} = require("../controllers/formController");
 
 const router = express.Router();
 
@@ -16,7 +24,5 @@ router.post("/paypal-payment", paypalPayment);
 router.post("/edit-paypal-details", editPaypalDetails);
 // Route to seed initial admin settings (only use this once)
 router.post("/seed-admin-settings", seedAdminSettings);
-
-
 
 module.exports = router;
