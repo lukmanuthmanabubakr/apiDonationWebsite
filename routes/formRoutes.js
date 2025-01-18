@@ -7,6 +7,7 @@ const {
   seedAdminSettings,
   paypalPayment,
   editPaypalDetails,
+  getAdminPaymentDetails,
 } = require("../controllers/formController");
 
 const router = express.Router();
@@ -24,5 +25,9 @@ router.post("/paypal-payment", paypalPayment);
 router.post("/edit-paypal-details", editPaypalDetails);
 // Route to seed initial admin settings (only use this once)
 router.post("/seed-admin-settings", seedAdminSettings);
+
+// Route for random users to view admin payment details
+router.get("/get-admin-payment-details", getAdminPaymentDetails);
+
 
 module.exports = router;

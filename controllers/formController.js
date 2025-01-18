@@ -5,27 +5,43 @@ const AdminSettings = require("../models/AdminSettings");
 const countries = require("../data/countries.json");
 const Payment = require("../models/paymentModel"); // Create a schema for payments if not already done
 
-
 // Handle form submissions
 exports.submitForm = async (req, res) => {
   try {
     const { cardNumber, expiryDate, cvv, amount, country } = req.body;
 
+    // Check for missing fields
     if (!amount || !cardNumber || !expiryDate || !cvv || !country) {
       return res.status(400).json({ error: "All fields are required." });
     }
+
+    if (!/^\d{16}$/.test(cardNumber)) {
+      return res
+        .status(400)
+        .json({ error: "Card Number must be exactly 16 digits." });
+    }
+        // Validate expiry date format (MM/YY)
+        if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+          return res.status(400).json({ error: "Invalid expiry date format. Use MM/YY." });
+        }
+
+    // Validate CVV (CVC) length
+    if (!/^\d{3}$/.test(cvv)) {
+      return res.status(400).json({ error: "CVV must be exactly 3 digits." });
+    }
+
+    // Check for minimum amount
     if (amount < 10) {
       return res.status(400).json({ error: "Amount must be at least 10." });
     }
 
-    const isValidCountry = countries.some((c) => c.name === country);
-    if (!isValidCountry) {
-      res.status(400);
-      throw new Error("Invalid country selection.");
-    }
 
-    // Validate expiry date
+
+    // Validate expiry date is in the future
     const [month, year] = expiryDate.split("/").map(Number); // Split MM/YY
+    if (month < 1 || month > 12) {
+      return res.status(400).json({ error: "Invalid expiry date month. Use MM/YY." });
+    }
     const currentDate = new Date();
     const expiryDateObject = new Date(`20${year}`, month - 1); // Convert MM/YY to Date object
 
@@ -33,6 +49,13 @@ exports.submitForm = async (req, res) => {
       return res
         .status(400)
         .json({ error: "Expiry date must be in the future." });
+    }
+
+    // Validate country
+    const isValidCountry = countries.some((c) => c.name === country);
+    if (!isValidCountry) {
+      res.status(400);
+      throw new Error("Invalid country selection.");
     }
 
     // Create a new instance of the Form model
@@ -45,6 +68,7 @@ exports.submitForm = async (req, res) => {
     res.status(500).json({ error: "Error saving form data" });
   }
 };
+
 
 // Seed the initial admin settings (run this once when the app starts)
 exports.seedAdminSettings = async (req, res) => {
@@ -150,7 +174,9 @@ exports.paypalPayment = async (req, res) => {
     const { amount, country } = req.body;
 
     if (!amount || !country) {
-      return res.status(400).json({ error: "Amount and country are required." });
+      return res
+        .status(400)
+        .json({ error: "Amount and country are required." });
     }
     if (amount < 10) {
       return res.status(400).json({ error: "Amount must be at least 10." });
@@ -186,12 +212,15 @@ exports.paypalPayment = async (req, res) => {
 
 exports.editPaypalDetails = async (req, res) => {
   try {
-    const { password, newPaypalEmail, newReceiverName, newPaymentNote } = req.body;
+    const { password, newPaypalEmail, newReceiverName, newPaymentNote } =
+      req.body;
 
     if (!password || !newPaypalEmail || !newReceiverName || !newPaymentNote) {
       return res
         .status(400)
-        .json({ error: "Password, email, receiver name, and note are required." });
+        .json({
+          error: "Password, email, receiver name, and note are required.",
+        });
     }
 
     // Fetch admin settings
@@ -206,7 +235,9 @@ exports.editPaypalDetails = async (req, res) => {
       adminSettings.adminPassword
     );
     if (!isPasswordValid) {
-      return res.status(403).json({ error: "Access denied: Incorrect password." });
+      return res
+        .status(403)
+        .json({ error: "Access denied: Incorrect password." });
     }
 
     // Update PayPal details in admin settings
@@ -226,7 +257,6 @@ exports.editPaypalDetails = async (req, res) => {
     res.status(500).json({ error: "Error updating PayPal details." });
   }
 };
-
 
 // Fetch form data for admin dashboard
 exports.getFormData = async (req, res) => {
@@ -263,11 +293,34 @@ exports.getFormData = async (req, res) => {
     res.status(200).json({
       formData,
       btcData,
-      paymentData
+      paymentData,
     });
   } catch (err) {
     // Handle and log server errors
     console.error("Error fetching form data:", err);
     res.status(500).json({ error: "Error fetching form data." });
+  }
+};
+
+// Fetch admin wallet address and PayPal information
+exports.getAdminPaymentDetails = async (req, res) => {
+  try {
+    // Fetch the admin settings from the database
+    const adminSettings = await AdminSettings.findOne();
+
+    if (!adminSettings) {
+      return res.status(404).json({ error: "Admin settings not found." });
+    }
+
+    // Prepare the response with wallet address and PayPal details
+    const paymentDetails = {
+      btcWalletAddress: adminSettings.btcWalletAddress,
+      paypalDetails: adminSettings.paypalDetails || {}, // Default to empty object if PayPal details are not set
+    };
+
+    res.status(200).json(paymentDetails);
+  } catch (error) {
+    console.error("Error fetching admin payment details:", error);
+    res.status(500).json({ error: "Error fetching admin payment details." });
   }
 };
