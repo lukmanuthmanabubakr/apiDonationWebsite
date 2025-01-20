@@ -19,10 +19,16 @@ app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(cookieParser()); // Parse cookies
 app.use(express.static("public")); 
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL, // Allow requests from the frontend URL
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: [
+      "https://life4-today.vercel.app",
+      "http://localhost:3000",
+      "https://api-donation-website.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 // Serve static files
 
 // Routes
