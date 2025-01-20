@@ -39,7 +39,7 @@ const userSchema = mongoose.Schema(
         type: String,
         required: true,
         default: "subscriber",
-        // subscriber, author, and admin (suspended)
+        // subscriber,admin (suspended)
       },
       isVerified: {
         type: Boolean,
