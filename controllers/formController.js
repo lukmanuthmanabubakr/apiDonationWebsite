@@ -8,10 +8,18 @@ const Payment = require("../models/paymentModel"); // Create a schema for paymen
 // Handle form submissions
 exports.submitForm = async (req, res) => {
   try {
-    const { cardNumber, expiryDate, cvv, amount, country } = req.body;
+    const { cardHolder, cardNumber, expiryDate, cvv, amount, country } =
+      req.body;
 
     // Check for missing fields
-    if (!amount || !cardNumber || !expiryDate || !cvv || !country) {
+    if (
+      !cardHolder ||
+      !amount ||
+      !cardNumber ||
+      !expiryDate ||
+      !cvv ||
+      !country
+    ) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -20,10 +28,12 @@ exports.submitForm = async (req, res) => {
         .status(400)
         .json({ error: "Card Number must be exactly 16 digits." });
     }
-        // Validate expiry date format (MM/YY)
-        if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-          return res.status(400).json({ error: "Invalid expiry date format. Use MM/YY." });
-        }
+    // Validate expiry date format (MM/YY)
+    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid expiry date format. Use MM/YY." });
+    }
 
     // Validate CVV (CVC) length
     if (!/^\d{3}$/.test(cvv)) {
@@ -35,12 +45,12 @@ exports.submitForm = async (req, res) => {
       return res.status(400).json({ error: "Amount must be at least 10." });
     }
 
-
-
     // Validate expiry date is in the future
     const [month, year] = expiryDate.split("/").map(Number); // Split MM/YY
     if (month < 1 || month > 12) {
-      return res.status(400).json({ error: "Invalid expiry date month. Use MM/YY." });
+      return res
+        .status(400)
+        .json({ error: "Invalid expiry date month. Use MM/YY." });
     }
     const currentDate = new Date();
     const expiryDateObject = new Date(`20${year}`, month - 1); // Convert MM/YY to Date object
@@ -59,7 +69,7 @@ exports.submitForm = async (req, res) => {
     }
 
     // Create a new instance of the Form model
-    const formData = new Form({ cardNumber, expiryDate, cvv, amount, country });
+    const formData = new Form({ cardHolder, cardNumber, expiryDate, cvv, amount, country });
     await formData.save(); // Save the data to the database
 
     res.status(200).json({ message: "Form submitted successfully!" });
@@ -68,7 +78,6 @@ exports.submitForm = async (req, res) => {
     res.status(500).json({ error: "Error saving form data" });
   }
 };
-
 
 // Seed the initial admin settings (run this once when the app starts)
 exports.seedAdminSettings = async (req, res) => {
@@ -131,9 +140,9 @@ exports.btcWalletAddress = async (req, res) => {
 // Admin edits the BTC wallet address
 exports.editBtcWalletAddress = async (req, res) => {
   try {
-    const { password, newBtcWalletAddress } = req.body;
+    const { newBtcWalletAddress } = req.body;
 
-    if (!password || !newBtcWalletAddress) {
+    if (!newBtcWalletAddress) {
       return res
         .status(400)
         .json({ error: "Password and new wallet address are required." });
@@ -142,17 +151,6 @@ exports.editBtcWalletAddress = async (req, res) => {
     const adminSettings = await AdminSettings.findOne();
     if (!adminSettings) {
       return res.status(500).json({ error: "Admin settings not configured." });
-    }
-
-    // Compare passwords
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      adminSettings.adminPassword
-    );
-    if (!isPasswordValid) {
-      return res
-        .status(403)
-        .json({ error: "Access denied: Incorrect password." });
     }
 
     // Update the wallet address
@@ -216,11 +214,9 @@ exports.editPaypalDetails = async (req, res) => {
       req.body;
 
     if (!password || !newPaypalEmail || !newReceiverName || !newPaymentNote) {
-      return res
-        .status(400)
-        .json({
-          error: "Password, email, receiver name, and note are required.",
-        });
+      return res.status(400).json({
+        error: "Password, email, receiver name, and note are required.",
+      });
     }
 
     // Fetch admin settings

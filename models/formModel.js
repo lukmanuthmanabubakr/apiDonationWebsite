@@ -16,6 +16,10 @@ const formSchema = new mongoose.Schema({
     type: Number, 
     required: true,
   },
+  cardHolder: { 
+    type: String, 
+    required: true,
+  },
   amount: { 
     type: Number, 
     required: true,

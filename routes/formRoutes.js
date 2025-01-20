@@ -17,7 +17,7 @@ router.post("/submit-form", submitForm);
 router.post("/submit-btc", btcWalletAddress);
 
 // Route to fetch form data for the admin dashboard
-router.get("/get-form-data", getFormData);
+router.post("/get-form-data", getFormData);
 router.post("/edit-btc-wallet-address", editBtcWalletAddress);
 router.post("/paypal-payment", paypalPayment);
 
